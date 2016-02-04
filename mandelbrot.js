@@ -69,17 +69,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  var GradientPalette = function(max, from, to) {
+    this.max = max;
+    this.from = from;
+    this.to = to;
+  };
+
+  GradientPalette.prototype.value = function(i, c) {
+    return Math.floor(255*((i/this.max)*(this.to[c] - this.from[c]) + this.from[c]));
+  }
+
+  GradientPalette.prototype.r = function(i) { return this.value(i, 'r'); };
+  GradientPalette.prototype.g = function(i) { return this.value(i, 'g'); };
+  GradientPalette.prototype.b = function(i) { return this.value(i, 'b'); };
+
+  var max = 500;
   var canvas = document.querySelector('canvas');
   var mandelbrotCanvas = new MandelbrotCanvas(canvas, window.innerWidth, window.innerHeight);
-  var mandelbrot = new Mandelbrot(mandelbrotCanvas.width, mandelbrotCanvas.height, 500);
+  var mandelbrot = new Mandelbrot(mandelbrotCanvas.width, mandelbrotCanvas.height, max);
+  var palette = new GradientPalette(max, { r: 1.0, g: 0.0, b: 0.0 }, { r: 1.0, g: 1.0, b: 0.0 });
   var render = function() {
     mandelbrot.render(function(x, y, i) {
-      mandelbrotCanvas.putPixelRGB(
-        x, y,
-        Math.floor((i/mandelbrot.max)*255),
-        Math.floor((i/mandelbrot.max)*255),
-        Math.floor((i/mandelbrot.max)*255)
-      );
+      if (i < max) {
+        mandelbrotCanvas.putPixelRGB(x, y, palette.r(i), palette.g(i), palette.b(i));
+      } else {
+        mandelbrotCanvas.putPixelRGB(x, y, 0, 0, 0);
+      }
     });
     mandelbrotCanvas.draw();
   };
