@@ -27,17 +27,28 @@ document.addEventListener('DOMContentLoaded', function() {
     this.width = width;
     this.height = height;
     this.max = max;
-    // FIXME: Fit inside re [-2, 1], im [-1, 1]
-    this.imMin = -1;
-    this.imMax = 1;
-    this.reMin = -2;
-    this.reMax = this.width*((this.imMax - this.imMin)/this.height) + this.reMin;
+    this.reCenter = -0.5;
+    this.imCenter = 0.0;
+    this.scale = 1;
+    // FIXME: Fit inside re [-2, 1], im [-1, 1] while keeping aspect ratio
+    this.reSize = 3;
+    this.imSize = 2;
+  };
+
+  Mandelbrot.prototype.zoom = function(x, y, factor) {
+    var reSize = this.reSize*this.scale;
+    var imSize = this.imSize*this.scale;
+    this.reCenter = this.reCenter - reSize/2 + (x/this.width)*reSize;
+    this.imCenter = this.imCenter - imSize/2 + (y/this.height)*imSize;
+    this.scale = this.scale/factor;
   };
 
   Mandelbrot.prototype.escape = function(x, y) {
     var re, im, x, y, i, tmp;
-    re = (x/this.width)*(this.reMax - this.reMin) + this.reMin;
-    im = (y/this.height)*(this.imMax - this.imMin) + this.imMin;
+    var reSize = this.reSize*this.scale;
+    var imSize = this.imSize*this.scale;
+    re = this.reCenter - reSize/2 + (x/this.width)*reSize;
+    im = this.imCenter - imSize/2 + (y/this.height)*imSize;
     x = y = 0;
     i = 0;
     while (x*x + y*y <= 4 && i < this.max) {
@@ -72,5 +83,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     mandelbrotCanvas.draw();
   };
+
+  canvas.addEventListener('click', function(e) {
+    var x = e.pageX - canvas.offsetLeft;
+    var y = e.pageY - canvas.offsetTop;
+    mandelbrot.zoom(x, y, 2.0);
+    console.log('Location:', mandelbrot.reCenter, mandelbrot.imCenter, mandelbrot.scale);
+    render();
+  });
+
   render();
 });
