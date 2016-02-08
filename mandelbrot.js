@@ -44,19 +44,34 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   Mandelbrot.prototype.escape = function(x, y) {
-    var re, im, x, y, i, tmp;
+    var re, im, x, y, i, tmp, logZn, nu;
+
+    // FIXME: Doesn't belong here
+    // Calculate the model size of the new area to draw
     var reSize = this.reSize*this.scale;
     var imSize = this.imSize*this.scale;
+
+    // Find the point of interest
     re = this.reCenter - reSize/2 + (x/this.width)*reSize;
     im = this.imCenter - imSize/2 + (y/this.height)*imSize;
-    x = y = 0;
+
+    // Do the actual escape calculation
     i = 0;
-    while (x*x + y*y <= 4 && i < this.max) {
+    x = y = 0;
+    while (x*x + y*y <= 256 && i < this.max) {
       tmp = x*x - y*y + re;
       y = 2*x*y + im;
       x = tmp;
       i++;
     }
+
+    // Smoothen the result
+    if (i < this.max) {
+      logZn = Math.log(x*x + y*y)/2;
+      nu = Math.log(logZn/Math.LN2)/Math.LN2;
+      i = i + 1 - nu;
+    }
+
     return i;
   };
 
@@ -87,11 +102,22 @@ document.addEventListener('DOMContentLoaded', function() {
   var canvas = document.querySelector('canvas');
   var mandelbrotCanvas = new MandelbrotCanvas(canvas, window.innerWidth, window.innerHeight);
   var mandelbrot = new Mandelbrot(mandelbrotCanvas.width, mandelbrotCanvas.height, max);
-  var palette = new GradientPalette(max, { r: 1.0, g: 0.0, b: 0.0 }, { r: 1.0, g: 1.0, b: 0.0 });
+  var palette = [
+    { r: 255, g:   0, b:   0 },
+    { r:   0, g: 255, b:   0 },
+    { r:   0, g:   0, b: 255 },
+  ];
   var render = function() {
     mandelbrot.render(function(x, y, i) {
       if (i < max) {
-        mandelbrotCanvas.putPixelRGB(x, y, palette.r(i), palette.g(i), palette.b(i));
+        var n = Math.floor(i);
+        var f = i%1;
+        var color1 = palette[n%palette.length];
+        var color2 = palette[(n + 1)%palette.length];
+        var r = Math.floor(color1.r - f*(color1.r - color2.r));
+        var g = Math.floor(color1.g - f*(color1.g - color2.g));
+        var b = Math.floor(color1.b - f*(color1.b - color2.b));
+        mandelbrotCanvas.putPixelRGB(x, y, r, g, b);
       } else {
         mandelbrotCanvas.putPixelRGB(x, y, 0, 0, 0);
       }
