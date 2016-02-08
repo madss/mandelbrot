@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   Mandelbrot.prototype.escape = function(x, y) {
-    var re, im, x, y, i, tmp, logZn, nu;
+    var re, im, q, i, x, y, xtmp, ytmp, logZn, nu;
 
     // FIXME: Doesn't belong here
     // Calculate the model size of the new area to draw
@@ -55,13 +55,29 @@ document.addEventListener('DOMContentLoaded', function() {
     re = this.reCenter - reSize/2 + (x/this.width)*reSize;
     im = this.imCenter - imSize/2 + (y/this.height)*imSize;
 
+    // Skip if inside the cardioid
+    q = (re - 0.25)*(re - 0.25) + im*im;
+    if ((q*(q + (re - 0.25))) < 0.25*im*im) {
+      return this.max;
+    }
+
+    // Skip if inside the period-2 bulb
+    if ((re + 1)*(re + 1) + im*im < 1/16) {
+      return this.max;
+    }
+
     // Do the actual escape calculation
     i = 0;
     x = y = 0;
     while (x*x + y*y <= 256 && i < this.max) {
-      tmp = x*x - y*y + re;
-      y = 2*x*y + im;
-      x = tmp;
+      xtmp = x*x - y*y + re;
+      ytmp = 2*x*y + im;
+      // Abort if nothing changes
+      if (x === xtmp && y === ytmp) {
+        return this.max;
+      }
+      x = xtmp;
+      y = ytmp;
       i++;
     }
 
@@ -83,6 +99,14 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   };
+
+  function measure(f) {
+    var start, end;
+    start = performance.now();
+    f();
+    end = performance.now();
+    return end - start;
+  }
 
   var GradientPalette = function(max, from, to) {
     this.max = max;
@@ -137,5 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
     render();
   });
 
-  render();
+  var time = measure(render);
+  console.log('Initial render took', time/1000, 'ms');
 });
