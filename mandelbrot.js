@@ -128,7 +128,11 @@ document.addEventListener('DOMContentLoaded', function() {
   canvas.addEventListener('click', function(e) {
     var x = e.pageX - canvas.offsetLeft;
     var y = e.pageY - canvas.offsetTop;
-    mandelbrot.zoom(x, y, 2.0);
+    var zoom = e.shiftKey ? 1.1 : 5.0;
+    if (e.ctrlKey) {
+      zoom = 1.0/zoom;
+    }
+    mandelbrot.zoom(x, y, zoom);
     console.log('Location:', mandelbrot.reCenter, mandelbrot.imCenter, mandelbrot.scale);
     render();
   });
