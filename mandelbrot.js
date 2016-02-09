@@ -111,6 +111,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
+  function color(r, g, b) {
+    return { r: r, g: g, b: b};
+  }
+
+  var Palette = {
+    monochrome: function() {
+      return [color(255, 255, 255), color(0, 0, 0)];
+    },
+    rainbox: function() {
+      return [
+        color(255, 0, 0),
+        color(255, 127, 0),
+        color(255, 255, 0),
+        color(0, 255, 0),
+        color(0, 0, 255),
+        color(75, 0, 130),
+        color(143, 0, 255)
+      ];
+    },
+    gradient: function(max, from, to) {
+      var p = [];
+      for (var i = 0; i < max; i++) {
+        p.push(color(
+          Math.floor((i/max)*(to.r - from.r) + from.r),
+          Math.floor((i/max)*(to.g - from.g) + from.g),
+          Math.floor((i/max)*(to.b - from.b) + from.b)
+        ));
+      }
+      return p;
+    },
+    random: function(max) {
+      var p = [];
+      var n = Math.floor(max*Math.random());
+      for (var i = 0; i < n; i++) {
+        p.push(color(
+          Math.floor(255*Math.random()),
+          Math.floor(255*Math.random()),
+          Math.floor(255*Math.random())
+        ));
+      }
+      return p;
+    }
+  };
+
   function measure(f) {
     var start, end;
     start = performance.now();
@@ -118,20 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
     end = performance.now();
     return end - start;
   }
-
-  var randomPalette = function(max) {
-    var p, n, i;
-    p = [];
-    n = Math.floor(max*Math.random());
-    for (i = 0; i < n; i++) {
-      p.push({
-        r: Math.floor(255*Math.random()),
-        g: Math.floor(255*Math.random()),
-        b: Math.floor(255*Math.random())
-      });
-    }
-    return p;
-  };
 
   var max = 500;
   var canvas = document.querySelector('canvas');
@@ -145,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
     mandelbrotCanvas.height,
     max
   );
-  var palette = randomPalette(max);
+  var palette = Palette.gradient(max/8, color(255, 0, 0), color(255, 255, 0));
   var render = function() {
     mandelbrot.render(function(canvasX, canvasY, i) {
       var r = 0, g = 0, b = 0;
